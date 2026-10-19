@@ -1,0 +1,38 @@
+services:
+  app:
+    build:
+      context: .
+    image: demo:1.0.0
+    container_name: node-backend
+    environment:
+      PORT: 7777
+      MONGO_URI: mongodb://mongo:27017/my-app
+    ports:
+      - "7777:7777"
+    networks:
+      - node-net
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:7.0
+    container_name: mongodb
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - node-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+networks:
+  node-net:
+    driver: bridge
+
+volumes:
+  mongo-data:
